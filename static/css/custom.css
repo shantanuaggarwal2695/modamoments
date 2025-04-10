@@ -1,0 +1,49 @@
+/* Additional custom styles */
+
+.feature-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.feature-list li {
+    padding: 8px 0;
+    position: relative;
+    padding-left: 28px;
+}
+
+.feature-list li:before {
+    content: "✓";
+    color: var(--bs-success);
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+}
+
+pre {
+    border-radius: 6px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+code {
+    white-space: pre-wrap;
+}
+
+.example-request strong {
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    font-weight: 500;
+}
+
+.footer {
+    margin-top: 60px;
+}
