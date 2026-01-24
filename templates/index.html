@@ -8,31 +8,234 @@
 </head>
 <body>
     <div id="app">
-        <!-- Search Bar -->
-        <div id="search-container" class="search-container" style="display: none;">
-            <div class="search-wrapper">
-                <input 
-                    type="text" 
-                    id="search-input" 
-                    class="search-input" 
-                    placeholder="Search reels, products, influencers..."
-                    autocomplete="off"
-                />
-                <button id="search-clear" class="search-clear" style="display: none;">&times;</button>
-                <span class="search-icon">🔍</span>
+        <!-- Top Navigation Bar -->
+        <div id="top-nav" class="top-nav" style="display: flex;">
+            <div class="top-nav-content">
+                <div class="nav-logo">
+                    <span class="logo-text">ModaMoments</span>
+                </div>
+                <div class="nav-buttons">
+                    <button id="shop-btn" class="nav-button">
+                        <span class="btn-icon">🛍️</span>
+                        <span class="btn-label">Shop</span>
+                    </button>
+                    <button id="influencers-btn" class="nav-button">
+                        <span class="btn-icon">👥</span>
+                        <span class="btn-label">Influencers</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shop Navigation Bar (with search) -->
+        <div id="shop-nav" class="shop-nav" style="display: none;">
+            <div class="shop-nav-content">
+                <button id="back-to-home-btn" class="back-button">
+                    <span>←</span> Home
+                </button>
+                <div class="search-wrapper">
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        class="search-input" 
+                        placeholder="Search reels, products, influencers..."
+                        autocomplete="off"
+                    />
+                    <button id="search-clear" class="search-clear" style="display: none;">&times;</button>
+                    <span class="search-icon">🔍</span>
+                </div>
             </div>
             <div id="search-results-count" class="search-results-count"></div>
         </div>
 
         <!-- Loading Screen -->
-        <div id="loading" class="loading-screen">
+        <div id="loading" class="loading-screen" style="display: none;">
             <div class="spinner"></div>
             <p>Loading fashion reels...</p>
         </div>
 
-        <!-- Reel Feed Container -->
+        <!-- Landing Page -->
+        <div id="landing-page" class="landing-page" style="display: block;">
+            <div class="landing-hero">
+                <h1 class="hero-title">ModaMoments</h1>
+                <p class="hero-subtitle">No More Searching. No More DMs. Just Shop.</p>
+                <p class="hero-description">
+                    Tired of manually searching for products you see in reels? Sick of DMing influencers for links? 
+                    <strong>ModaMoments</strong> eliminates the hassle. Shop directly from every reel with one click—no searching, no waiting, no hassle.
+                </p>
+                <div class="hero-buttons">
+                    <button id="start-shopping-btn" class="cta-button primary">
+                        Start Shopping
+                    </button>
+                    <button id="explore-influencers-btn" class="cta-button secondary">
+                        Explore Influencers
+                    </button>
+                </div>
+            </div>
+
+            <!-- Problem/Solution Section -->
+            <div class="problem-solution">
+                <div class="problem-section">
+                    <h2 class="section-title">The Old Way ❌</h2>
+                    <div class="problem-list">
+                        <div class="problem-item">
+                            <span class="problem-icon">🔍</span>
+                            <div>
+                                <h3>Manual Product Search</h3>
+                                <p>Spend hours searching Google, Amazon, or brand websites trying to find the exact product you saw in a reel</p>
+                            </div>
+                        </div>
+                        <div class="problem-item">
+                            <span class="problem-icon">💬</span>
+                            <div>
+                                <h3>DM Influencers</h3>
+                                <p>Wait days (or never get a response) when you DM influencers asking for product links</p>
+                            </div>
+                        </div>
+                        <div class="problem-item">
+                            <span class="problem-icon">⏰</span>
+                            <div>
+                                <h3>Time Wasted</h3>
+                                <p>Lose interest or forget about products while waiting for links or searching</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="solution-section">
+                    <h2 class="section-title">The ModaMoments Way ✅</h2>
+                    <div class="solution-list">
+                        <div class="solution-item">
+                            <span class="solution-icon">⚡</span>
+                            <div>
+                                <h3>Instant Access</h3>
+                                <p>Every product is linked directly in the reel. Click "Shop Now" and see all products, prices, and sizes instantly</p>
+                            </div>
+                        </div>
+                        <div class="solution-item">
+                            <span class="solution-icon">🎯</span>
+                            <div>
+                                <h3>No Searching Required</h3>
+                                <p>All products from each reel are curated and ready to shop. No need to search anywhere</p>
+                            </div>
+                        </div>
+                        <div class="solution-item">
+                            <span class="solution-icon">🛒</span>
+                            <div>
+                                <h3>Shop in Seconds</h3>
+                                <p>From watching a reel to viewing products to making a purchase—all in under a minute</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="landing-features">
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Reel-Based Shopping</h3>
+                    <p>Swipe through fashion reels in a TikTok-style feed and shop products directly from each video.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Influencer-Driven</h3>
+                    <p>Discover curated fashion looks from top influencers and shop their exact styles.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>No More Searching or DMs</h3>
+                    <p>Skip the hassle of manually searching for products or waiting for influencer DMs. All products are linked directly in each reel.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎥</div>
+                    <h3>Video Content</h3>
+                    <p>Watch engaging video showcases of products in action before you buy.</p>
+                </div>
+            </div>
+
+            <div class="landing-how-it-works">
+                <h2>How It Works</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Browse Reels</h3>
+                        <p>Scroll through fashion reels created by influencers</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Discover Products</h3>
+                        <p>See products showcased in each video</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Shop Instantly</h3>
+                        <p>Click "Shop Now" to see all products, prices, and sizes—no searching, no DMs needed</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Waitlist Section -->
+            <div class="waitlist-section">
+                <div class="waitlist-content">
+                    <h2 class="waitlist-title">Join the Waitlist</h2>
+                    <p class="waitlist-description">
+                        Be among the first to experience seamless shopping from influencer reels. 
+                        Get early access and exclusive updates!
+                    </p>
+                    <form id="waitlist-form" class="waitlist-form">
+                        <div class="waitlist-input-group">
+                            <input 
+                                type="email" 
+                                id="waitlist-email" 
+                                class="waitlist-input" 
+                                placeholder="Enter your email address"
+                                required
+                                autocomplete="email"
+                            />
+                            <button type="submit" class="waitlist-button">
+                                Join Waitlist
+                            </button>
+                        </div>
+                        <div id="waitlist-message" class="waitlist-message"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reel Feed Container (Shop Page) -->
         <div id="reel-feed" class="reel-feed" style="display: none;">
             <!-- Reels will be dynamically inserted here -->
+        </div>
+
+        <!-- Influencers Container -->
+        <div id="influencers-container" class="influencers-container" style="display: none;">
+            <div class="influencers-header">
+                <h1>Our Influencers</h1>
+                <p>Discover fashion creators and shop their curated looks</p>
+            </div>
+            
+            <!-- Top Influencers Section -->
+            <div class="influencers-section">
+                <h2 class="section-title">⭐ Top Influencers</h2>
+                <div id="top-influencers-grid" class="influencers-grid">
+                    <!-- Top influencers will be dynamically inserted here -->
+                </div>
+            </div>
+            
+            <!-- Trending Section -->
+            <div class="influencers-section">
+                <h2 class="section-title">🔥 Trending</h2>
+                <div id="trending-influencers-grid" class="influencers-grid">
+                    <!-- Trending influencers will be dynamically inserted here -->
+                </div>
+            </div>
+            
+            <!-- Collab Section -->
+            <div class="influencers-section">
+                <h2 class="section-title">🤝 Collab</h2>
+                <div id="collab-influencers-grid" class="influencers-grid">
+                    <!-- Collab influencers will be dynamically inserted here -->
+                </div>
+            </div>
         </div>
 
         <!-- Product Modal -->

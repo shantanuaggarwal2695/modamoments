@@ -1,5 +1,7 @@
 import os
+import json
 import logging
+from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_from_directory
 
 from feed.feed_generator import FeedGenerator
@@ -140,6 +142,156 @@ def get_reel(reel_id):
         }), 500
 
 
+@app.route('/api/influencers', methods=['GET'])
+def get_influencers():
+    """
+    API endpoint to get all unique influencers with their details.
+    
+    Returns:
+    {
+        "success": true,
+        "influencers": [
+            {
+                "name": "Influencer Name",
+                "username": "@username",
+                "avatar": "avatar_url",
+                "reel_count": 5,
+                "reels": [...]
+            }
+        ]
+    }
+    """
+    try:
+        feed_generator = FeedGenerator()
+        generated_feed = feed_generator.generate_feed()
+        
+        # Collect unique influencers with their reels
+        influencers_dict = {}
+        
+        for reel in generated_feed:
+            influencer = reel.influencer
+            if not influencer:
+                continue
+                
+            # Use username as unique key, fallback to name
+            key = influencer.get('username', influencer.get('name', 'unknown'))
+            
+            if key not in influencers_dict:
+                influencers_dict[key] = {
+                    'name': influencer.get('name', 'Fashion Influencer'),
+                    'username': influencer.get('username', '@fashionista'),
+                    'avatar': influencer.get('avatar', 'https://ui-avatars.com/api/?name=Fashion+Influencer&background=random'),
+                    'reel_count': 0,
+                    'reels': []
+                }
+            
+            # Add reel info
+            influencers_dict[key]['reel_count'] += 1
+            influencers_dict[key]['reels'].append({
+                'id': reel.id,
+                'shortDescription': reel.shortDescription,
+                'url': reel.url,
+                'thumbnail': reel.url  # Could be enhanced with actual thumbnails
+            })
+        
+        # Convert to list
+        influencers_list = list(influencers_dict.values())
+        
+        # Sort by reel count (most active first)
+        influencers_list.sort(key=lambda x: x['reel_count'], reverse=True)
+        
+        return jsonify({
+            "success": True,
+            "influencers": influencers_list
+        })
+
+    except Exception as e:
+        logger.error(f"Error in get_influencers endpoint: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"An error occurred: {str(e)}"
+        }), 500
+
+
+@app.route('/api/waitlist', methods=['POST'])
+def add_to_waitlist():
+    """
+    API endpoint to add an email to the waitlist.
+    
+    Expected JSON input:
+    {
+        "email": "user@example.com"
+    }
+    
+    Returns:
+    {
+        "success": true,
+        "message": "Successfully added to waitlist"
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No data provided"
+            }), 400
+        
+        email = data.get('email', '').strip().lower()
+        
+        if not email:
+            return jsonify({
+                "success": False,
+                "error": "Email is required"
+            }), 400
+        
+        # Basic email validation
+        if '@' not in email or '.' not in email.split('@')[1]:
+            return jsonify({
+                "success": False,
+                "error": "Invalid email format"
+            }), 400
+        
+        # Load existing waitlist
+        waitlist_file = os.path.join(os.path.dirname(__file__), 'data', 'waitlist.json')
+        
+        if os.path.exists(waitlist_file):
+            with open(waitlist_file, 'r') as f:
+                waitlist_data = json.load(f)
+        else:
+            waitlist_data = {"emails": []}
+        
+        # Check if email already exists
+        if email in waitlist_data.get('emails', []):
+            return jsonify({
+                "success": False,
+                "error": "Email already registered"
+            }), 400
+        
+        # Add email to waitlist
+        waitlist_data.setdefault('emails', []).append(email)
+        waitlist_data['last_updated'] = str(datetime.now().isoformat())
+        
+        # Save waitlist
+        with open(waitlist_file, 'w') as f:
+            json.dump(waitlist_data, f, indent=2)
+        
+        logger.info(f"Added email to waitlist: {email}")
+        
+        return jsonify({
+            "success": True,
+            "message": "Successfully added to waitlist!"
+        })
+        
+    except Exception as e:
+        logger.error(f"Error adding to waitlist: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"An error occurred: {str(e)}"
+        }), 500
+
+
 @app.route('/api/health')
 def health_check():
     """Health check endpoint to verify the API is running."""
@@ -150,4 +302,5 @@ def health_check():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8888, debug=True)
+    port = int(os.environ.get("PORT", 8888))
+    app.run(host="0.0.0.0", port=port, debug=False)

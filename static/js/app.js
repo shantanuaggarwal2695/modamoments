@@ -7,15 +7,29 @@ class ModaMomentsApp {
         this.currentReelIndex = 0;
         this.videos = [];
         this.searchQuery = '';
+        this.influencers = [];
+        this.currentPage = 'landing';
+        this.feedLoaded = false;
         this.init();
     }
 
     async init() {
-        await this.loadFeed();
+        // Hide loading screen immediately
+        document.getElementById('loading').style.display = 'none';
         this.setupEventListeners();
+        // Don't load feed immediately - load when shop is accessed
+        await this.loadInfluencers();
+        this.showLandingPage();
     }
 
     async loadFeed() {
+        if (this.feedLoaded) {
+            return;
+        }
+        
+        const loading = document.getElementById('loading');
+        loading.style.display = 'flex';
+        
         try {
             const response = await fetch('/api/feed');
             const data = await response.json();
@@ -24,13 +38,15 @@ class ModaMomentsApp {
                 this.reels = data.reels;
                 this.filteredReels = data.reels;
                 this.renderFeed();
-                this.hideLoading();
+                this.feedLoaded = true;
             } else {
-                this.showError('Failed to load feed');
+                console.error('Failed to load feed:', data.error);
             }
         } catch (error) {
             console.error('Error loading feed:', error);
-            this.showError('Error loading feed. Please refresh the page.');
+        } finally {
+            // Always hide loading screen
+            loading.style.display = 'none';
         }
     }
 
@@ -224,6 +240,156 @@ class ModaMomentsApp {
 
         // Search functionality
         this.setupSearchListeners();
+        
+        // Navigation buttons
+        this.setupNavigationButtons();
+        
+        // Waitlist form
+        this.setupWaitlistForm();
+    }
+
+    setupWaitlistForm() {
+        const waitlistForm = document.getElementById('waitlist-form');
+        const waitlistEmail = document.getElementById('waitlist-email');
+        const waitlistMessage = document.getElementById('waitlist-message');
+        
+        waitlistForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = waitlistEmail.value.trim();
+            
+            if (!email) {
+                this.showWaitlistMessage('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            // Disable form during submission
+            waitlistForm.querySelector('button').disabled = true;
+            waitlistForm.querySelector('button').textContent = 'Joining...';
+            
+            try {
+                const response = await fetch('/api/waitlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.showWaitlistMessage(data.message || 'Successfully joined the waitlist! 🎉', 'success');
+                    waitlistEmail.value = '';
+                } else {
+                    this.showWaitlistMessage(data.error || 'Something went wrong. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting waitlist:', error);
+                this.showWaitlistMessage('Network error. Please try again later.', 'error');
+            } finally {
+                // Re-enable form
+                waitlistForm.querySelector('button').disabled = false;
+                waitlistForm.querySelector('button').textContent = 'Join Waitlist';
+            }
+        });
+    }
+
+    showWaitlistMessage(message, type) {
+        const waitlistMessage = document.getElementById('waitlist-message');
+        waitlistMessage.textContent = message;
+        waitlistMessage.className = `waitlist-message ${type}`;
+        waitlistMessage.style.display = 'block';
+        
+        // Hide message after 5 seconds for success, keep error visible
+        if (type === 'success') {
+            setTimeout(() => {
+                waitlistMessage.style.display = 'none';
+            }, 5000);
+        }
+    }
+
+    setupNavigationButtons() {
+        // Shop button
+        const shopBtn = document.getElementById('shop-btn');
+        shopBtn.addEventListener('click', () => {
+            this.showShopPage();
+        });
+
+        // Influencers button
+        const influencersBtn = document.getElementById('influencers-btn');
+        influencersBtn.addEventListener('click', () => {
+            this.showInfluencersPage();
+        });
+
+        // Start shopping button on landing page
+        const startShoppingBtn = document.getElementById('start-shopping-btn');
+        startShoppingBtn.addEventListener('click', () => {
+            this.showShopPage();
+        });
+
+        // Explore influencers button on landing page
+        const exploreInfluencersBtn = document.getElementById('explore-influencers-btn');
+        exploreInfluencersBtn.addEventListener('click', () => {
+            this.showInfluencersPage();
+        });
+
+        // Back to home button
+        const backToHomeBtn = document.getElementById('back-to-home-btn');
+        backToHomeBtn.addEventListener('click', () => {
+            this.showLandingPage();
+        });
+    }
+
+    showLandingPage() {
+        this.currentPage = 'landing';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('landing-page').style.display = 'block';
+        document.getElementById('reel-feed').style.display = 'none';
+        document.getElementById('influencers-container').style.display = 'none';
+        document.getElementById('top-nav').style.display = 'flex';
+        document.getElementById('shop-nav').style.display = 'none';
+        
+        // Update nav buttons
+        document.getElementById('shop-btn').classList.remove('active');
+        document.getElementById('influencers-btn').classList.remove('active');
+    }
+
+    async showShopPage() {
+        this.currentPage = 'shop';
+        document.getElementById('landing-page').style.display = 'none';
+        document.getElementById('influencers-container').style.display = 'none';
+        document.getElementById('top-nav').style.display = 'none';
+        document.getElementById('shop-nav').style.display = 'block';
+        
+        // Load feed if not already loaded
+        if (!this.feedLoaded) {
+            await this.loadFeed();
+        } else {
+            // Make sure loading is hidden if feed is already loaded
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        document.getElementById('reel-feed').style.display = 'block';
+        
+        // Update nav buttons
+        document.getElementById('shop-btn').classList.add('active');
+        document.getElementById('influencers-btn').classList.remove('active');
+    }
+
+    showInfluencersPage() {
+        this.currentPage = 'influencers';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('landing-page').style.display = 'none';
+        document.getElementById('reel-feed').style.display = 'none';
+        document.getElementById('shop-nav').style.display = 'none';
+        document.getElementById('top-nav').style.display = 'flex';
+        document.getElementById('influencers-container').style.display = 'block';
+        this.renderInfluencers();
+        
+        // Update nav buttons
+        document.getElementById('shop-btn').classList.remove('active');
+        document.getElementById('influencers-btn').classList.add('active');
     }
 
     setupSearchListeners() {
@@ -364,8 +530,8 @@ class ModaMomentsApp {
                         </div>
                     </div>
                 `).join('')}
-            </div>
-        `;
+                    </div>
+                `;
         
         detailsContainer.innerHTML = productsHTML;
         modal.classList.add('active');
@@ -402,13 +568,131 @@ class ModaMomentsApp {
         }
     }
 
-    hideLoading() {
-        const loading = document.getElementById('loading');
-        const feed = document.getElementById('reel-feed');
-        const searchContainer = document.getElementById('search-container');
-        loading.style.display = 'none';
-        feed.style.display = 'block';
-        searchContainer.style.display = 'block';
+    async loadInfluencers() {
+        try {
+            const response = await fetch('/api/influencers');
+            const data = await response.json();
+            
+            if (data.success) {
+                this.influencers = data.influencers;
+            }
+        } catch (error) {
+            console.error('Error loading influencers:', error);
+        }
+    }
+
+    renderInfluencers() {
+        if (this.influencers.length === 0) {
+            document.getElementById('top-influencers-grid').innerHTML = '<p class="no-influencers">No influencers found.</p>';
+            return;
+        }
+
+        // Categorize influencers
+        const topInfluencers = this.getTopInfluencers();
+        const trendingInfluencers = this.getTrendingInfluencers();
+        const collabInfluencers = this.getCollabInfluencers();
+
+        // Render each section
+        this.renderInfluencerSection('top-influencers-grid', topInfluencers);
+        this.renderInfluencerSection('trending-influencers-grid', trendingInfluencers);
+        this.renderInfluencerSection('collab-influencers-grid', collabInfluencers);
+    }
+
+    getTopInfluencers() {
+        // Top influencers: sorted by reel count (top 6)
+        return [...this.influencers]
+            .sort((a, b) => b.reel_count - a.reel_count)
+            .slice(0, 6);
+    }
+
+    getTrendingInfluencers() {
+        // Trending: influencers with medium reel count (next 6)
+        const sorted = [...this.influencers].sort((a, b) => b.reel_count - a.reel_count);
+        return sorted.slice(6, 12);
+    }
+
+    getCollabInfluencers() {
+        // Collab: remaining influencers or all if less than 12 total
+        const sorted = [...this.influencers].sort((a, b) => b.reel_count - a.reel_count);
+        return sorted.slice(12);
+    }
+
+    renderInfluencerSection(containerId, influencers) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        if (influencers.length === 0) {
+            container.innerHTML = '<p class="no-influencers">Coming soon...</p>';
+            return;
+        }
+
+        influencers.forEach(influencer => {
+            const card = this.createInfluencerCard(influencer);
+            container.appendChild(card);
+        });
+    }
+
+    createInfluencerCard(influencer) {
+        const card = document.createElement('div');
+        card.className = 'influencer-card';
+        
+        const avatar = document.createElement('img');
+        avatar.className = 'influencer-card-avatar';
+        avatar.src = influencer.avatar;
+        avatar.alt = influencer.name;
+        avatar.onerror = function() {
+            this.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(influencer.name) + '&background=random';
+        };
+
+        const info = document.createElement('div');
+        info.className = 'influencer-card-info';
+        
+        const name = document.createElement('h2');
+        name.className = 'influencer-card-name';
+        name.textContent = influencer.name;
+        
+        const username = document.createElement('p');
+        username.className = 'influencer-card-username';
+        username.textContent = influencer.username;
+        
+        const stats = document.createElement('div');
+        stats.className = 'influencer-card-stats';
+        stats.innerHTML = `
+            <div class="stat-item">
+                <span class="stat-value">${influencer.reel_count}</span>
+                <span class="stat-label">Reels</span>
+            </div>
+        `;
+        
+        const viewButton = document.createElement('button');
+        viewButton.className = 'influencer-card-button';
+        viewButton.textContent = 'View Reels';
+        viewButton.onclick = () => this.filterByInfluencer(influencer.username);
+        
+        info.appendChild(name);
+        info.appendChild(username);
+        info.appendChild(stats);
+        info.appendChild(viewButton);
+        
+        card.appendChild(avatar);
+        card.appendChild(info);
+        
+        return card;
+    }
+
+    filterByInfluencer(username) {
+        // Switch to shop page
+        this.showShopPage();
+        
+        // Filter reels by influencer
+        const searchInput = document.getElementById('search-input');
+        searchInput.value = username;
+        this.searchQuery = username.toLowerCase();
+        this.performSearch();
+        
+        // Scroll to top
+        const feedContainer = document.getElementById('reel-feed');
+        feedContainer.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     showError(message) {
@@ -419,8 +703,8 @@ class ModaMomentsApp {
                 <button onclick="location.reload()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
                     Retry
                 </button>
-            </div>
-        `;
+                </div>
+            `;
     }
 }
 
