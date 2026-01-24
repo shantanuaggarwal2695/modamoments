@@ -12,9 +12,22 @@ class FeedGenerator:
         # Get the base directory (parent of feed directory)
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         reels_json_path = os.path.join(base_dir, "data", "reels.json")
-        with open(reels_json_path, 'r') as f:
-            self.reel_data = json.load(f)
         self.base_dir = base_dir
+        
+        # Load reels data with error handling
+        try:
+            if os.path.exists(reels_json_path):
+                with open(reels_json_path, 'r') as f:
+                    self.reel_data = json.load(f)
+            else:
+                # If file doesn't exist, use empty dict
+                self.reel_data = {}
+        except Exception as e:
+            # Log error but don't crash
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error loading reels.json: {str(e)}")
+            self.reel_data = {}
     
     def _get_video_url(self, video_filename: str, remote_url: str) -> str:
         """

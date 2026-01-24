@@ -39,11 +39,6 @@ export SESSION_SECRET="your-secret-key"
 python app.py
 ```
 
-Or:
-```bash
-python main.py
-```
-
 The app will be available at `http://localhost:8888`
 
 ## API Endpoints
@@ -95,7 +90,6 @@ Health check endpoint.
 ```
 modamoments/
 ├── app.py                 # Main Flask application
-├── main.py                # Entry point
 ├── data/
 │   ├── reels.json        # Reel data with products
 │   └── product_catalog.json

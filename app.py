@@ -11,14 +11,22 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, 
+            static_folder='static',
+            template_folder='templates')
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 
 
 @app.route('/')
 def index():
     """Render the main page with the reel feed."""
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Error rendering index: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return f"Error loading page: {str(e)}", 500
 
 
 @app.route('/videos/<filename>')
@@ -72,16 +80,20 @@ def get_feed():
         # Convert Reel objects to dictionaries
         feed_data = []
         for reel in generated_feed:
-            reel_dict = {
-                'id': reel.id,
-                'shortDescription': reel.shortDescription,
-                'longDescription': reel.longDescription,
-                'products': reel.products,
-                'hashtags': reel.hashtags,
-                'url': reel.url,
-                'influencer': reel.influencer
-            }
-            feed_data.append(reel_dict)
+            try:
+                reel_dict = {
+                    'id': reel.id,
+                    'shortDescription': reel.shortDescription,
+                    'longDescription': reel.longDescription,
+                    'products': reel.products,
+                    'hashtags': reel.hashtags,
+                    'url': reel.url,
+                    'influencer': reel.influencer
+                }
+                feed_data.append(reel_dict)
+            except Exception as e:
+                logger.error(f"Error processing reel: {str(e)}")
+                continue
         
         return jsonify({
             "success": True,
@@ -90,6 +102,8 @@ def get_feed():
 
     except Exception as e:
         logger.error(f"Error in get_feed endpoint: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return jsonify({
             "success": False,
             "error": f"An error occurred: {str(e)}"
@@ -169,30 +183,34 @@ def get_influencers():
         influencers_dict = {}
         
         for reel in generated_feed:
-            influencer = reel.influencer
-            if not influencer:
-                continue
+            try:
+                influencer = reel.influencer
+                if not influencer:
+                    continue
+                    
+                # Use username as unique key, fallback to name
+                key = influencer.get('username', influencer.get('name', 'unknown'))
                 
-            # Use username as unique key, fallback to name
-            key = influencer.get('username', influencer.get('name', 'unknown'))
-            
-            if key not in influencers_dict:
-                influencers_dict[key] = {
-                    'name': influencer.get('name', 'Fashion Influencer'),
-                    'username': influencer.get('username', '@fashionista'),
-                    'avatar': influencer.get('avatar', 'https://ui-avatars.com/api/?name=Fashion+Influencer&background=random'),
-                    'reel_count': 0,
-                    'reels': []
-                }
-            
-            # Add reel info
-            influencers_dict[key]['reel_count'] += 1
-            influencers_dict[key]['reels'].append({
-                'id': reel.id,
-                'shortDescription': reel.shortDescription,
-                'url': reel.url,
-                'thumbnail': reel.url  # Could be enhanced with actual thumbnails
-            })
+                if key not in influencers_dict:
+                    influencers_dict[key] = {
+                        'name': influencer.get('name', 'Fashion Influencer'),
+                        'username': influencer.get('username', '@fashionista'),
+                        'avatar': influencer.get('avatar', 'https://ui-avatars.com/api/?name=Fashion+Influencer&background=random'),
+                        'reel_count': 0,
+                        'reels': []
+                    }
+                
+                # Add reel info
+                influencers_dict[key]['reel_count'] += 1
+                influencers_dict[key]['reels'].append({
+                    'id': reel.id,
+                    'shortDescription': reel.shortDescription,
+                    'url': reel.url,
+                    'thumbnail': reel.url  # Could be enhanced with actual thumbnails
+                })
+            except Exception as e:
+                logger.error(f"Error processing reel for influencers: {str(e)}")
+                continue
         
         # Convert to list
         influencers_list = list(influencers_dict.values())
@@ -207,8 +225,11 @@ def get_influencers():
 
     except Exception as e:
         logger.error(f"Error in get_influencers endpoint: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         return jsonify({
             "success": False,
+            "influencers": [],
             "error": f"An error occurred: {str(e)}"
         }), 500
 
@@ -295,12 +316,29 @@ def add_to_waitlist():
 @app.route('/api/health')
 def health_check():
     """Health check endpoint to verify the API is running."""
-    return jsonify({
-        "status": "healthy",
-        "service": "modamoments"
-    })
+    try:
+        # Test if we can load the feed generator
+        feed_generator = FeedGenerator()
+        return jsonify({
+            "status": "healthy",
+            "service": "modamoments",
+            "reels_loaded": len(feed_generator.reel_data) if feed_generator.reel_data else 0
+        })
+    except Exception as e:
+        logger.error(f"Health check error: {str(e)}")
+        return jsonify({
+            "status": "degraded",
+            "service": "modamoments",
+            "error": str(e)
+        }), 503
 
+
+# Log app initialization
+logger.info("ModaMoments app initialized")
+logger.info(f"Static folder: {app.static_folder}")
+logger.info(f"Template folder: {app.template_folder}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8888))
+    logger.info(f"Starting app on port {port}")
     app.run(host="0.0.0.0", port=port, debug=False)
