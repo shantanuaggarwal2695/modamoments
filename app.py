@@ -1,9 +1,8 @@
 import os
 import logging
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 
 from feed.feed_generator import FeedGenerator
-from ranker.reel_ranker import ReelRanker
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -11,133 +10,130 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
-
-# Initialize reel ranker
-reel_ranker = ReelRanker()
+app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 
 
 @app.route('/')
 def index():
-    """Render the main page with the input form."""
+    """Render the main page with the reel feed."""
     return render_template('index.html')
 
 
-@app.route('/docs')
-def docs():
-    """Render the API documentation page."""
-    return render_template('docs.html')
-
-
-@app.route('/api/rank_reels', methods=['POST'])
-def rank_reels():
-    """
-    API endpoint to rank reels based on conversation relevance.
+@app.route('/videos/<filename>')
+def serve_video(filename):
+    """Serve video files from the data/reels directory."""
+    video_dir = os.path.join(os.path.dirname(__file__), 'data', 'reels')
     
-    Expected JSON input:
+    # Security: Only allow video files
+    if not filename.endswith(('.mp4', '.webm', '.mov', '.avi')):
+        return jsonify({"error": "Invalid file type"}), 400
+    
+    response = send_from_directory(video_dir, filename)
+    
+    # Set headers for video streaming
+    response.headers['Accept-Ranges'] = 'bytes'
+    response.headers['Cache-Control'] = 'public, max-age=3600'
+    
+    return response
+
+
+@app.route('/api/feed', methods=['GET'])
+def get_feed():
+    """
+    API endpoint to get the reel feed for e-commerce.
+    
+    Query Parameters:
+        user_id (optional): User ID for personalized feed
+        
+    Returns:
     {
-        "query": "user question or statement",
-        "conversation_history": [
-            {"role": "user", "content": "previous user message"},
-            {"role": "assistant", "content": "previous assistant message"}
-        ],
+        "success": true,
         "reels": [
             {
                 "id": "reel1",
-                "title": "Reel title",
-                "description": "Reel description",
-                "tags": ["tag1", "tag2"],
-                ...
+                "shortDescription": "Reel description",
+                "longDescription": "Full description",
+                "products": [...],
+                "hashtags": [...],
+                "url": "video_url",
+                "influencer": {...}
             }
         ]
     }
-    
-    Returns:
-    {
-        "ranked_reels": [
-            {
-                "id": "reel1",
-                "title": "Reel title",
-                "description": "Reel description",
-                "relevance_score": 0.92,
-                ...
-            }
-        ],
-        "success": true
-    }
     """
     try:
-        data = request.get_json()
-
-        if not data:
-            return jsonify({"success": False, "error": "No JSON data provided"}), 400
-
-        # Extract required fields
-        query = data.get('query', '')
-        conversation_history = data.get('conversation_history', [])
-        reels = data.get('reels', [])
-
-        # Validate inputs
-        if not query:
-            return jsonify({"success": False, "error": "Query is required"}), 400
-
-        if not reels:
-            return jsonify({"success": False, "error": "No reels provided for ranking"}), 400
-
-        # Rank the reels
-        ranked_reels = reel_ranker.rank_reels(query, conversation_history, reels)
-
+        user_id = request.args.get('user_id')
+        
+        feed_generator = FeedGenerator()
+        generated_feed = feed_generator.generate_feed(user_profile={'user_id': user_id} if user_id else None)
+        
+        # Convert Reel objects to dictionaries
+        feed_data = []
+        for reel in generated_feed:
+            reel_dict = {
+                'id': reel.id,
+                'shortDescription': reel.shortDescription,
+                'longDescription': reel.longDescription,
+                'products': reel.products,
+                'hashtags': reel.hashtags,
+                'url': reel.url,
+                'influencer': reel.influencer
+            }
+            feed_data.append(reel_dict)
+        
         return jsonify({
             "success": True,
-            "ranked_reels": ranked_reels
+            "reels": feed_data
         })
 
     except Exception as e:
-        logger.error(f"Error in rank_reels endpoint: {str(e)}")
+        logger.error(f"Error in get_feed endpoint: {str(e)}")
         return jsonify({
             "success": False,
             "error": f"An error occurred: {str(e)}"
         }), 500
 
 
-@app.route('/api/generate_feed', methods=['GET'])
-def generate_feed():
+@app.route('/api/reel/<reel_id>', methods=['GET'])
+def get_reel(reel_id):
     """
-    API endpoint to get all the reels for the feed.
-
-    Expected input:
-    user_id: str
-
+    API endpoint to get a specific reel by ID.
+    
     Returns:
     {
-        "ranked_reels": [
-            {
-                "id": "reel1",
-                "shortDescription": "Reel title",
-                "longDescription": "Reel description",
-                "products": [],
-                "hashtags": [],
-                "url": ""
-                "relevance_score": 0.92,
-            }
-        ],
-        "success": true
+        "success": true,
+        "reel": {...}
     }
     """
     try:
-        data = request.args.get('user_id')
-
-        if not data:
-            return jsonify({"success": False, "error": "No user_id provided"}), 400
-
-        # Rank the reels
         feed_generator = FeedGenerator()
-        generated_feed = feed_generator.generate_feed(user_profile=None)
-        generated_feed = [feed_object.__dict__ for feed_object in generated_feed]
-        return jsonify(generated_feed)
+        feed = feed_generator.generate_feed()
+        
+        reel = next((r for r in feed if r.id == reel_id), None)
+        
+        if not reel:
+            return jsonify({
+                "success": False,
+                "error": "Reel not found"
+            }), 404
+        
+        reel_dict = {
+            'id': reel.id,
+            'shortDescription': reel.shortDescription,
+            'longDescription': reel.longDescription,
+            'products': reel.products,
+            'hashtags': reel.hashtags,
+            'url': reel.url,
+            'influencer': reel.influencer
+        }
+        
+        return jsonify({
+            "success": True,
+            "reel": reel_dict
+        })
 
     except Exception as e:
-        logger.error(f"Error in rank_reels endpoint: {str(e)}")
+        logger.error(f"Error in get_reel endpoint: {str(e)}")
         return jsonify({
             "success": False,
             "error": f"An error occurred: {str(e)}"
@@ -147,19 +143,10 @@ def generate_feed():
 @app.route('/api/health')
 def health_check():
     """Health check endpoint to verify the API is running."""
-    openai_status = reel_ranker.check_openai_connection()
-
-    if openai_status["connected"]:
-        return jsonify({
-            "status": "healthy",
-            "openai_connection": "connected"
-        })
-    else:
-        return jsonify({
-            "status": "degraded",
-            "openai_connection": "disconnected",
-            "error": openai_status.get("error", "Unknown error")
-        }), 503
+    return jsonify({
+        "status": "healthy",
+        "service": "modamoments"
+    })
 
 
 if __name__ == "__main__":

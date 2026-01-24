@@ -1,0 +1,9 @@
+[project]
+name = "modamoments"
+version = "0.1.0"
+description = "A reel-based e-commerce platform driven by influencers. Shop fashion directly from video reels."
+requires-python = ">=3.10"
+dependencies = [
+    "flask>=3.1.0",
+    "gunicorn>=23.0.0",
+]

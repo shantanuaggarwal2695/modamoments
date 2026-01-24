@@ -2,6 +2,11 @@
   "video6.mp4": {
     "description": "A woman in a green sleeveless top and beige pants showcases a pair of white ballet flats. The outfit is casual and stylish, suitable for everyday wear or light social gatherings.",
     "id": "67eb75bd8ae95f0a4e4cef5e",
+    "influencer": {
+      "name": "Sarah Chen",
+      "username": "@sarahstyle",
+      "avatar": "https://ui-avatars.com/api/?name=Sarah+Chen&background=667eea&color=fff"
+    },
     "products": [
       {
         "id": "1",
@@ -48,6 +53,11 @@
   "video30.mp4": {
     "description": "A man styles a charcoal suit with a navy blue polo shirt, navy loafers, and a silver watch. This business casual look is suitable for office environments or semi-formal events.",
     "id": "67eb759829c8d43b36bdb248",
+    "influencer": {
+      "name": "Marcus Johnson",
+      "username": "@marcusmenswear",
+      "avatar": "https://ui-avatars.com/api/?name=Marcus+Johnson&background=764ba2&color=fff"
+    },
     "products": [
       {
         "id": "3",
@@ -94,6 +104,11 @@
   "video10.mp4": {
     "description": "A young woman dashes through a cityscape in a light brown puffer jacket and distressed blue jeans, ideal for casual outings or everyday wear, showcasing a blend of comfort and urban style.",
     "id": "67eb757d2039e46912d3f899",
+    "influencer": {
+      "name": "Emma Rodriguez",
+      "username": "@emmastreetstyle",
+      "avatar": "https://ui-avatars.com/api/?name=Emma+Rodriguez&background=4fc3f7&color=fff"
+    },
     "products": [
       {
         "id": "5",
