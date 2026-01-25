@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - ModaMoments</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <style>
+        .admin-dashboard {
+            min-height: 100vh;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+        }
+        .admin-header {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .admin-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+        .admin-header-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .admin-button {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-button-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .admin-button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        .admin-button-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .admin-button-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .admin-stats {
+            max-width: 1200px;
+            margin: 0 auto 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .admin-stat-card {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .admin-stat-label {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .admin-stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .admin-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .admin-waitlist-table {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-x: auto;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .admin-table th {
+            text-align: left;
+            padding: 15px;
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .admin-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+        .admin-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .admin-empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .admin-empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .admin-error-state {
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            color: #ff3b30;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .admin-header-actions {
+                width: 100%;
+            }
+            .admin-button {
+                flex: 1;
+                justify-content: center;
+            }
+            .admin-table {
+                font-size: 14px;
+            }
+            .admin-table th,
+            .admin-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-dashboard">
+        <div class="admin-header">
+            <h1>Admin Dashboard</h1>
+            <div class="admin-header-actions">
+                <a href="{{ url_for('download_waitlist', format='csv') }}" class="admin-button admin-button-primary">
+                    📥 Download CSV
+                </a>
+                <a href="{{ url_for('download_waitlist', format='json') }}" class="admin-button admin-button-primary">
+                    📥 Download JSON
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="admin-button admin-button-secondary">
+                    🚪 Logout
+                </a>
+            </div>
+        </div>
+
+        <div class="admin-stats">
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">Total Emails</div>
+                <div class="admin-stat-value">{{ count }}</div>
+            </div>
+            <div class="admin-stat-card">
+                <div class="admin-stat-label">Last Updated</div>
+                <div class="admin-stat-value" style="font-size: 18px; color: #999;">
+                    {{ last_updated if last_updated != 'Never' else 'Never' }}
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-content">
+            {% if error %}
+            <div class="admin-error-state">
+                <strong>Error:</strong> {{ error }}
+            </div>
+            {% endif %}
+
+            <div class="admin-waitlist-table">
+                {% if emails %}
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Email Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for email in emails %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ email }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="admin-empty-state">
+                    <div class="admin-empty-state-icon">📭</div>
+                    <h3>No emails in waitlist yet</h3>
+                    <p>The waitlist is currently empty.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,9 +1,12 @@
 import os
 import json
 import logging
+import csv
+import io
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, redirect, url_for, Response
+from functools import wraps
 
 from feed.feed_generator import FeedGenerator
 
@@ -444,6 +447,132 @@ def upload_video():
         return jsonify({
             "success": False,
             "error": f"An error occurred during upload: {str(e)}"
+        }), 500
+
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin_login():
+    """Admin login page."""
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')  # Default password, change in production
+        
+        if password == admin_password:
+            session['admin_logged_in'] = True
+            return redirect(url_for('admin_dashboard'))
+        else:
+            return render_template('admin_login.html', error='Invalid password')
+    
+    # If already logged in, redirect to dashboard
+    if session.get('admin_logged_in'):
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin_login.html')
+
+
+@app.route('/admin/logout')
+def admin_logout():
+    """Admin logout."""
+    session.pop('admin_logged_in', None)
+    return redirect(url_for('admin_login'))
+
+
+def admin_required(f):
+    """Decorator to require admin authentication."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin_logged_in'):
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.route('/admin/dashboard')
+@admin_required
+def admin_dashboard():
+    """Admin dashboard to view waitlist."""
+    try:
+        waitlist_file = os.path.join(os.path.dirname(__file__), 'data', 'waitlist.json')
+        
+        if os.path.exists(waitlist_file):
+            with open(waitlist_file, 'r') as f:
+                waitlist_data = json.load(f)
+        else:
+            waitlist_data = {"emails": [], "last_updated": None}
+        
+        emails = waitlist_data.get('emails', [])
+        last_updated = waitlist_data.get('last_updated', 'Never')
+        
+        return render_template('admin_dashboard.html', 
+                             emails=emails, 
+                             count=len(emails),
+                             last_updated=last_updated)
+    except Exception as e:
+        logger.error(f"Error loading admin dashboard: {str(e)}")
+        return render_template('admin_dashboard.html', 
+                             emails=[], 
+                             count=0,
+                             last_updated='Error loading data',
+                             error=str(e))
+
+
+@app.route('/admin/waitlist/download')
+@admin_required
+def download_waitlist():
+    """Download waitlist as CSV."""
+    try:
+        waitlist_file = os.path.join(os.path.dirname(__file__), 'data', 'waitlist.json')
+        
+        if os.path.exists(waitlist_file):
+            with open(waitlist_file, 'r') as f:
+                waitlist_data = json.load(f)
+        else:
+            waitlist_data = {"emails": [], "last_updated": None}
+        
+        emails = waitlist_data.get('emails', [])
+        format_type = request.args.get('format', 'csv')  # csv or json
+        
+        if format_type == 'json':
+            # Return JSON download
+            response = jsonify({
+                "emails": emails,
+                "count": len(emails),
+                "last_updated": waitlist_data.get('last_updated', 'Never'),
+                "exported_at": datetime.now().isoformat()
+            })
+            response.headers['Content-Disposition'] = f'attachment; filename=waitlist_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+            return response
+        else:
+            # Return CSV download
+            # Create CSV in memory
+            si = io.StringIO()
+            writer = csv.writer(si)
+            
+            # Write header
+            writer.writerow(['Email', 'Count'])
+            
+            # Write emails with index
+            for idx, email in enumerate(emails, 1):
+                writer.writerow([email, idx])
+            
+            # Create Flask response
+            output = si.getvalue()
+            si.close()
+            
+            response = Response(
+                output,
+                mimetype='text/csv',
+                headers={
+                    'Content-Disposition': f'attachment; filename=waitlist_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+                }
+            )
+            return response
+            
+    except Exception as e:
+        logger.error(f"Error downloading waitlist: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": f"An error occurred: {str(e)}"
         }), 500
 
 
