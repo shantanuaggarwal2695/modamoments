@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from datetime import datetime
+from werkzeug.utils import secure_filename
 from flask import Flask, request, jsonify, render_template, send_from_directory
 
 from feed.feed_generator import FeedGenerator
@@ -310,6 +311,139 @@ def add_to_waitlist():
         return jsonify({
             "success": False,
             "error": f"An error occurred: {str(e)}"
+        }), 500
+
+
+@app.route('/api/upload/video', methods=['POST'])
+def upload_video():
+    """
+    API endpoint to upload a video file to Railway mounted disk.
+    
+    Expected form data:
+        - file: Video file (multipart/form-data)
+        - userId (optional): User ID who is uploading
+        
+    Returns:
+    {
+        "success": true,
+        "message": "Video uploaded successfully",
+        "filename": "video.mp4",
+        "path": "/data/modamoments/reels/video.mp4",
+        "size": 1234567
+    }
+    """
+    try:
+        # Check if file is present in request
+        if 'file' not in request.files:
+            return jsonify({
+                "success": False,
+                "error": "No file provided. Use 'file' as the form field name."
+            }), 400
+        
+        file = request.files['file']
+        user_id = request.form.get('userId', 'unknown')
+        
+        # Check if file was actually selected
+        if file.filename == '':
+            return jsonify({
+                "success": False,
+                "error": "No file selected"
+            }), 400
+        
+        # Validate file extension
+        allowed_extensions = {'.mp4', '.webm', '.mov', '.avi', '.mkv'}
+        filename = secure_filename(file.filename)
+        file_ext = os.path.splitext(filename)[1].lower()
+        
+        if file_ext not in allowed_extensions:
+            return jsonify({
+                "success": False,
+                "error": f"Invalid file type. Allowed extensions: {', '.join(allowed_extensions)}"
+            }), 400
+        
+        # Check file size (limit to 500MB)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)  # Reset file pointer
+        
+        max_size = 500 * 1024 * 1024  # 500MB
+        if file_size > max_size:
+            return jsonify({
+                "success": False,
+                "error": f"File too large. Maximum size is 500MB, got {file_size / (1024*1024):.2f}MB"
+            }), 400
+        
+        # Determine upload directory - check multiple possible paths
+        upload_paths = [
+            '/data/modamoments/reels',
+            '/tmp/modamoments',
+            '/modamoments/data',
+            '/data/reels',
+            os.path.join(os.path.dirname(__file__), 'data', 'reels')
+        ]
+        
+        upload_dir = None
+        for path in upload_paths:
+            if os.path.exists(path) and os.path.isdir(path):
+                # Check if directory is writable
+                if os.access(path, os.W_OK):
+                    upload_dir = path
+                    logger.info(f"Using upload directory: {upload_dir}")
+                    break
+        
+        if upload_dir is None:
+            # Try to create the primary path
+            primary_path = '/data/modamoments/reels'
+            try:
+                os.makedirs(primary_path, exist_ok=True)
+                if os.access(primary_path, os.W_OK):
+                    upload_dir = primary_path
+                    logger.info(f"Created and using upload directory: {upload_dir}")
+                else:
+                    raise PermissionError(f"Cannot write to {primary_path}")
+            except (OSError, PermissionError) as e:
+                logger.error(f"Failed to create upload directory {primary_path}: {str(e)}")
+                # Fallback to local data/reels directory
+                fallback_dir = os.path.join(os.path.dirname(__file__), 'data', 'reels')
+                os.makedirs(fallback_dir, exist_ok=True)
+                upload_dir = fallback_dir
+                logger.warning(f"Using fallback upload directory: {upload_dir}")
+        
+        # Save the file
+        file_path = os.path.join(upload_dir, filename)
+        
+        # Handle filename conflicts by appending a number
+        base_name, ext = os.path.splitext(filename)
+        counter = 1
+        while os.path.exists(file_path):
+            new_filename = f"{base_name}_{counter}{ext}"
+            file_path = os.path.join(upload_dir, new_filename)
+            filename = new_filename
+            counter += 1
+        
+        file.save(file_path)
+        
+        # Get final file size
+        final_size = os.path.getsize(file_path)
+        
+        logger.info(f"Video uploaded successfully: {filename} by user {user_id} to {file_path} ({final_size} bytes)")
+        
+        return jsonify({
+            "success": True,
+            "message": "Video uploaded successfully",
+            "filename": filename,
+            "path": file_path,
+            "size": final_size,
+            "userId": user_id
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Error uploading video: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return jsonify({
+            "success": False,
+            "error": f"An error occurred during upload: {str(e)}"
         }), 500
 
 
