@@ -32,7 +32,27 @@ poetry install
 2. Set environment variables (optional):
 ```bash
 export SESSION_SECRET="your-secret-key"
+
+# Video Storage Configuration (choose one):
+# Option 1: Remote URL (S3, HTTP, etc.)
+export VIDEO_STORAGE_URL="https://your-bucket.s3.amazonaws.com/videos/"
+# or
+export VIDEO_STORAGE_URL="https://example.com/videos/"
+
+# Option 2: Local Path (external drive, network mount)
+export VIDEO_STORAGE_PATH="/Volumes/ExternalDrive/videos"
+# or
+export VIDEO_STORAGE_PATH="/mnt/network-storage/reels"
 ```
+
+**Video Storage Options:**
+- **VIDEO_STORAGE_URL**: Remote URL where videos are stored (S3, CDN, HTTP server)
+  - Videos will be downloaded during server startup
+  - Supports S3-compatible storage and regular HTTP/HTTPS URLs
+- **VIDEO_STORAGE_PATH**: Local path to videos (external drive, network mount)
+  - Videos will be copied during server startup
+  - Useful for external drives, NAS, or mounted volumes
+- **No configuration**: Videos must be in `data/reels/` directory
 
 3. Run the application:
 ```bash

@@ -333,6 +333,18 @@ def health_check():
         }), 503
 
 
+# Fetch videos on startup (before serving requests)
+try:
+    from utils.video_fetcher import fetch_videos_on_startup
+    logger.info("Fetching videos from external storage...")
+    video_count = fetch_videos_on_startup()
+    logger.info(f"Video fetch completed. {video_count} videos available.")
+except ImportError:
+    logger.warning("Video fetcher module not available, skipping video fetch")
+except Exception as e:
+    logger.error(f"Error fetching videos: {str(e)}")
+    # Continue even if video fetch fails
+
 # Log app initialization
 logger.info("ModaMoments app initialized")
 logger.info(f"Static folder: {app.static_folder}")
