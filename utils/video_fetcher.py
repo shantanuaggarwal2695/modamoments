@@ -235,7 +235,7 @@ class VideoFetcher:
             if not os.path.exists(storage_path):
                 logger.warning(f"Storage path does not exist: {storage_path}")
                 # Try common Railway mount paths as fallback
-                fallback_paths = ['/modamoments/data', '/data', '/mnt/data']
+                fallback_paths = ['/tmp/modamoments', '/tmp/modamoments/data', '/modamoments/data', '/data', '/mnt/data', 'data/reels']
                 for fallback in fallback_paths:
                     if os.path.exists(fallback):
                         logger.info(f"Found videos in fallback path: {fallback}")
@@ -245,7 +245,7 @@ class VideoFetcher:
             return self.fetch_from_local_path(storage_path, video_list)
         
         # If no VIDEO_STORAGE_PATH is set, check common Railway mount paths
-        common_paths = ['/modamoments/data', '/data', '/mnt/data']
+        common_paths = ['/tmp/modamoments', '/tmp/modamoments/data', '/modamoments/data', '/data', '/mnt/data']
         for path in common_paths:
             if os.path.exists(path):
                 logger.info(f"Found videos in common mount path: {path}")
