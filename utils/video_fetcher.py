@@ -234,9 +234,22 @@ class VideoFetcher:
             # Check if path exists
             if not os.path.exists(storage_path):
                 logger.warning(f"Storage path does not exist: {storage_path}")
-                logger.info("Videos should be uploaded to this path before server starts")
+                # Try common Railway mount paths as fallback
+                fallback_paths = ['/modamoments/data', '/data', '/mnt/data']
+                for fallback in fallback_paths:
+                    if os.path.exists(fallback):
+                        logger.info(f"Found videos in fallback path: {fallback}")
+                        return self.fetch_from_local_path(fallback, video_list)
+                logger.info("Videos should be uploaded to the configured path before server starts")
                 return 0
             return self.fetch_from_local_path(storage_path, video_list)
+        
+        # If no VIDEO_STORAGE_PATH is set, check common Railway mount paths
+        common_paths = ['/modamoments/data', '/data', '/mnt/data']
+        for path in common_paths:
+            if os.path.exists(path):
+                logger.info(f"Found videos in common mount path: {path}")
+                return self.fetch_from_local_path(path, video_list)
         
         logger.info("No VIDEO_STORAGE_URL or VIDEO_STORAGE_PATH set, skipping video fetch")
         return 0

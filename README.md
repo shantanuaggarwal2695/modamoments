@@ -44,7 +44,7 @@ export VIDEO_STORAGE_PATH="/Volumes/ExternalDrive/videos"
 # or
 export VIDEO_STORAGE_PATH="/mnt/network-storage/reels"
 # For Railway mounted volume:
-export VIDEO_STORAGE_PATH="/data"
+export VIDEO_STORAGE_PATH="/modamoments/data"
 ```
 
 **Video Storage Options:**
@@ -54,7 +54,7 @@ export VIDEO_STORAGE_PATH="/data"
 - **VIDEO_STORAGE_PATH**: Local path to videos (external drive, network mount, Railway volume)
   - Videos will be copied during server startup
   - Useful for external drives, NAS, or mounted volumes
-  - **For Railway**: Set to `/data` to use mounted volume
+  - **For Railway**: Set to `/modamoments/data` to use mounted volume
 - **No configuration**: Videos must be in `data/reels/` directory
 
 **Railway Setup:**
