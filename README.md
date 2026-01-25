@@ -39,20 +39,26 @@ export VIDEO_STORAGE_URL="https://your-bucket.s3.amazonaws.com/videos/"
 # or
 export VIDEO_STORAGE_URL="https://example.com/videos/"
 
-# Option 2: Local Path (external drive, network mount)
+# Option 2: Local Path (external drive, network mount, Railway volume)
 export VIDEO_STORAGE_PATH="/Volumes/ExternalDrive/videos"
 # or
 export VIDEO_STORAGE_PATH="/mnt/network-storage/reels"
+# For Railway mounted volume:
+export VIDEO_STORAGE_PATH="/data"
 ```
 
 **Video Storage Options:**
 - **VIDEO_STORAGE_URL**: Remote URL where videos are stored (S3, CDN, HTTP server)
   - Videos will be downloaded during server startup
   - Supports S3-compatible storage and regular HTTP/HTTPS URLs
-- **VIDEO_STORAGE_PATH**: Local path to videos (external drive, network mount)
+- **VIDEO_STORAGE_PATH**: Local path to videos (external drive, network mount, Railway volume)
   - Videos will be copied during server startup
   - Useful for external drives, NAS, or mounted volumes
+  - **For Railway**: Set to `/data` to use mounted volume
 - **No configuration**: Videos must be in `data/reels/` directory
+
+**Railway Setup:**
+See [RAILWAY_VIDEO_SETUP.md](RAILWAY_VIDEO_SETUP.md) for detailed instructions on uploading videos to Railway's mounted volume.
 
 3. Run the application:
 ```bash

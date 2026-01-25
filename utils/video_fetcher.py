@@ -199,7 +199,9 @@ class VideoFetcher:
         
         Checks environment variables in order:
         1. VIDEO_STORAGE_URL - Remote URL (S3, HTTP, etc.)
-        2. VIDEO_STORAGE_PATH - Local path (external drive, network mount)
+        2. VIDEO_STORAGE_PATH - Local path (external drive, network mount, Railway volume)
+        
+        For Railway: Set VIDEO_STORAGE_PATH=/data to use mounted volume
         
         Returns:
             Number of videos successfully fetched
@@ -225,10 +227,15 @@ class VideoFetcher:
             else:
                 return self.fetch_from_url(storage_url, video_list)
         
-        # Check for local path storage
+        # Check for local path storage (including Railway mounted volumes)
         storage_path = os.environ.get('VIDEO_STORAGE_PATH')
         if storage_path:
             logger.info(f"Fetching videos from local path: {storage_path}")
+            # Check if path exists
+            if not os.path.exists(storage_path):
+                logger.warning(f"Storage path does not exist: {storage_path}")
+                logger.info("Videos should be uploaded to this path before server starts")
+                return 0
             return self.fetch_from_local_path(storage_path, video_list)
         
         logger.info("No VIDEO_STORAGE_URL or VIDEO_STORAGE_PATH set, skipping video fetch")
