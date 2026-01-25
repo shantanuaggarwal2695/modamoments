@@ -516,6 +516,147 @@ body {
     display: block;
 }
 
+/* Seamless Checkout Section */
+.seamless-checkout-section {
+    padding: 100px 20px;
+    background: linear-gradient(135deg, rgba(52, 199, 89, 0.05) 0%, rgba(102, 126, 234, 0.05) 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.seamless-checkout-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.seamless-checkout-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.seamless-checkout-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: float 3s ease-in-out infinite;
+}
+
+.seamless-checkout-title {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #34c759 0%, #667eea 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+}
+
+.seamless-checkout-subtitle {
+    font-size: 24px;
+    color: #999;
+    font-weight: 500;
+    margin-bottom: 30px;
+    display: block;
+}
+
+.seamless-checkout-description {
+    max-width: 900px;
+    margin: 0 auto 60px;
+    text-align: center;
+}
+
+.seamless-checkout-description p {
+    font-size: 18px;
+    line-height: 1.8;
+    color: #ccc;
+    display: block;
+}
+
+.seamless-checkout-description strong {
+    color: #34c759;
+    font-weight: 600;
+}
+
+.seamless-checkout-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 60px;
+}
+
+.checkout-problem,
+.checkout-solution {
+    padding: 30px;
+    border-radius: 20px;
+}
+
+.checkout-problem {
+    background: rgba(255, 59, 48, 0.1);
+    border: 2px solid rgba(255, 59, 48, 0.3);
+}
+
+.checkout-solution {
+    background: rgba(52, 199, 89, 0.1);
+    border: 2px solid rgba(52, 199, 89, 0.3);
+}
+
+.comparison-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.checkout-problem .comparison-title {
+    color: #ff3b30;
+}
+
+.checkout-solution .comparison-title {
+    color: #34c759;
+}
+
+.comparison-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.comparison-item {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.comparison-item:hover {
+    transform: translateX(5px);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.comparison-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.comparison-item h4 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #fff;
+    display: block;
+}
+
+.comparison-item p {
+    font-size: 14px;
+    color: #ccc;
+    line-height: 1.6;
+    display: block;
+}
+
+
 /* Universal Agent Protocol Section */
 .agent-protocol-section {
     padding: 100px 20px;
@@ -1331,6 +1472,63 @@ body {
     .waitlist-input-group {
         flex-direction: column;
         gap: 12px;
+    }
+    
+    .seamless-checkout-section {
+        padding: 60px 20px;
+    }
+    
+    .seamless-checkout-icon {
+        font-size: 48px;
+    }
+    
+    .seamless-checkout-title {
+        font-size: 36px;
+    }
+    
+    .seamless-checkout-subtitle {
+        font-size: 20px;
+    }
+    
+    .seamless-checkout-description {
+        margin-bottom: 40px;
+    }
+    
+    .seamless-checkout-description p {
+        font-size: 16px;
+    }
+    
+    .seamless-checkout-comparison {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .checkout-problem,
+    .checkout-solution {
+        padding: 25px 20px;
+    }
+    
+    .comparison-title {
+        font-size: 24px;
+    }
+    
+    .comparison-item {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .comparison-icon {
+        font-size: 24px;
+    }
+    
+    .comparison-item h4 {
+        font-size: 16px;
+    }
+    
+    .comparison-item p {
+        font-size: 13px;
     }
     
     .agent-protocol-section {
