@@ -193,6 +193,26 @@ class VideoFetcher:
         
         return video_list
     
+    def _path_has_videos(self, path: str, video_list: List[str]) -> bool:
+        """
+        Check if a path contains any of the required videos.
+        
+        Args:
+            path: Directory path to check
+            video_list: List of video filenames to look for
+            
+        Returns:
+            True if at least one video exists in the path
+        """
+        if not os.path.exists(path) or not os.path.isdir(path):
+            return False
+        
+        for video_file in video_list:
+            video_path = os.path.join(path, video_file)
+            if os.path.exists(video_path):
+                return True
+        return False
+    
     def fetch_videos(self) -> int:
         """
         Main method to fetch videos based on environment configuration.
@@ -231,23 +251,29 @@ class VideoFetcher:
         storage_path = os.environ.get('VIDEO_STORAGE_PATH')
         if storage_path:
             logger.info(f"Fetching videos from local path: {storage_path}")
-            # Check if path exists
-            if not os.path.exists(storage_path):
-                logger.warning(f"Storage path does not exist: {storage_path}")
-                # Try common Railway mount paths as fallback
+            # Check if path exists and has videos
+            if not os.path.exists(storage_path) or not self._path_has_videos(storage_path, video_list):
+                if not os.path.exists(storage_path):
+                    logger.warning(f"Storage path does not exist: {storage_path}")
+                else:
+                    logger.warning(f"Storage path exists but doesn't contain videos: {storage_path}")
+                
+                # Try common Railway mount paths as fallback, prioritizing /tmp/modamoments
                 fallback_paths = ['/tmp/modamoments', '/tmp/modamoments/data', '/modamoments/data', '/data', '/mnt/data', 'data/reels']
                 for fallback in fallback_paths:
-                    if os.path.exists(fallback):
+                    if os.path.exists(fallback) and self._path_has_videos(fallback, video_list):
                         logger.info(f"Found videos in fallback path: {fallback}")
                         return self.fetch_from_local_path(fallback, video_list)
+                
                 logger.info("Videos should be uploaded to the configured path before server starts")
                 return 0
             return self.fetch_from_local_path(storage_path, video_list)
         
         # If no VIDEO_STORAGE_PATH is set, check common Railway mount paths
+        # Prioritize /tmp/modamoments since that's where videos are actually located
         common_paths = ['/tmp/modamoments', '/tmp/modamoments/data', '/modamoments/data', '/data', '/mnt/data']
         for path in common_paths:
-            if os.path.exists(path):
+            if os.path.exists(path) and self._path_has_videos(path, video_list):
                 logger.info(f"Found videos in common mount path: {path}")
                 return self.fetch_from_local_path(path, video_list)
         
